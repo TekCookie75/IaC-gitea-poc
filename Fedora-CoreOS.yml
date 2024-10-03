@@ -1,0 +1,168 @@
+variant: fcos
+version: 1.5.0
+systemd:
+  units:
+   # Enable Podman auto-updater for container images
+   - name: podman-auto-update.timer
+     enabled: true
+   # Add qemu-guest-agent overlay using rpm-ostree 
+   - name: rpm-ostree-install.qemu-guest-agent.service
+     enabled: true
+     contents_local: service/rpm-ostree-install-qemu-guest-agent.service
+storage:
+  disks:
+    - device: /dev/sdb
+      wipe_table: false
+      partitions:
+        - size_mib: 0
+          start_mib: 0
+          label: podman-volumes
+  filesystems:
+    - path: /var/home/git/.local/share/containers/storage/volumes
+      device: /dev/disk/by-partlabel/podman-volumes
+      wipe_filesystem: false
+      format: xfs
+      with_mount_unit: true
+      mount_options:
+        - noatime
+  links:
+    # setting link to podman-auto-update.timer in order to run
+    # it with low privileges in the context of `git` user
+    - path: /home/git/.config/systemd/user/timers.target.wants/podman-auto-update.timer
+      target: /usr/lib/systemd/user/podman-auto-update.timer
+      user:
+        name: git
+      group:
+        name: git
+  directories:
+    # setting up directory permissions required to avoid
+    # failure when starting `podman`
+    # due to possible bug in butane, we have to create each of
+    # the nested directories seperatly!
+    - path: /home/git/.config
+      user:
+        name: git
+      group:
+        name: git
+    - path: /home/git/.config/systemd
+      user:
+        name: git
+      group:
+        name: git
+    - path: /home/git/.config/systemd/user
+      user:
+        name: git
+      group:
+        name: git
+    - path: /home/git/.config/systemd/user/timers.target.wants
+      user:
+        name: git
+      group:
+        name: git
+    - path: /home/git/.config/containers
+      user:
+        name: git
+      group:
+        name: git
+    - path: /home/git/.config/containers/systemd
+      user:
+        name: git
+      group:
+        name: git
+  files:
+   # CoreOS related configuration
+   # -----------------------------------------------------------------
+   - path: /etc/hostname
+     mode: 0644
+     contents:
+       local: config/hostname.conf
+   - path: /etc/profile.d/systemd-pager.sh
+     mode: 0644
+     contents:
+       local: config/systemd-pager.sh
+   - path: /etc/sysctl.d/20-silence-audit.conf
+     mode: 0644
+     contents:
+       local: config/audit.conf         
+   - path: /etc/systemd/journald.conf
+     mode: 0644
+     overwrite: true
+     contents:
+       local: config/journald.conf
+   - path: /etc/zincati/config.d/55-updates-strategy.toml
+     contents:
+       local: config/update-strategy.toml
+   - path: /etc/NetworkManager/system-connections/enp6s18.nmconnection
+     mode: 0600
+     contents:
+       local: config/network.conf
+   # Podman related configuration
+   # -----------------------------------------------------------------
+   - path: /home/git/.config/containers/gitea.env
+     contents:
+       local: podman/environment/gitea.env
+     mode: 0600
+     user:
+       name: git
+     group:
+       name: git
+   - path: /home/git/.config/containers/systemd/gitea-net.network
+     contents:
+       local: podman/networks/gitea-net.network
+     mode: 0600
+     user:
+       name: git
+     group:
+       name: git
+   - path: /home/git/.config/containers/systemd/mariadb.volume
+     contents:
+       local: podman/volumes/mariadb.volume
+     mode: 0600
+     user:
+       name: git
+     group:
+       name: git
+   - path: /home/git/.config/containers/systemd/gitea-data.volume
+     contents:
+       local: podman/volumes/gitea-data.volume
+     mode: 0600
+     user:
+       name: git
+     group:
+       name: git
+   - path: /home/git/.config/containers/systemd/gitea-config.volume
+     contents:
+       local: podman/volumes/gitea-config.volume
+     mode: 0600
+     user:
+       name: git
+     group:
+       name: git
+   - path: /home/git/.config/containers/systemd/mariadb.container
+     contents:
+       local: podman/containers/mariadb.container
+     mode: 0600
+     user:
+       name: git
+     group:
+       name: git
+   - path: /home/git/.config/containers/systemd/gitea.container
+     contents:
+       local: podman/containers/gitea.container
+     mode: 0600
+     user:
+       name: git
+     group:
+       name: git
+passwd:
+  users:
+    - name: core
+      # Plain-text password `core` make sure to change in your environment
+      password_hash: $y$j9T$UkXp13RTeAePQnvtSQ1tZ.$6SVKLHwOMJHp6cOL//I93wKYeEBzR7xcWOIIxANcgv5
+      ssh_authorized_keys:
+        - <YOUR_SSH_KEY_HERE>
+    - name: git
+      # Plain-text password `git` make sure to change in your environment
+      password_hash: $y$j9T$BivWMPOq3.GR/S8zM4rIf/$UPjQiRBne8rxgv3fMyHAqCbXtbbzshDHNjIF9sRnuC8
+      ssh_authorized_keys:
+        - <YOUR_SSH_KEY_HERE>

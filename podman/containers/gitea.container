@@ -1,0 +1,27 @@
+[Unit]
+Description=Gitea - Git with a cup of tea
+
+Wants=network.target
+After=network-online.target
+RequiresMountsFor=%t/containers
+
+
+[Container]
+Image=docker.io/gitea/gitea:1-rootless
+ContainerName=gitea
+AutoUpdate=registry
+EnvironmentFile=/home/git/.config/containers/gitea.env
+Volume=gitea-data.volume:/var/lib/gitea:Z
+Volume=gitea-config.volume:/etc/gitea:Z
+Network=gitea-net.network
+PublishPort=2222:2222
+PublishPort=3000:3000
+
+[Service]
+Restart=on-failure
+TimeoutStartSec=900
+TimeoutStopSec=70
+
+
+[Install]
+WantedBy=multi-user.target default.target

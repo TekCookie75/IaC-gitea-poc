@@ -1,0 +1,5 @@
+[Network]
+DisableDNS=false
+Internal=true
+Subnet=192.168.30.0/24
+Gateway=192.168.30.1

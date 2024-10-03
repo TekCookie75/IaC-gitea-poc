@@ -1,0 +1,4 @@
+[Unit]
+Description=Gitea Volume for Configuration Files
+         
+[Volume]
