@@ -11,7 +11,7 @@ systemd:
      contents_local: service/rpm-ostree-install-qemu-guest-agent.service
 storage:
   disks:
-    - device: /dev/sdb
+    - device: /dev/vdb
       wipe_table: false
       partitions:
         - size_mib: 0
@@ -96,6 +96,12 @@ storage:
      mode: 0600
      contents:
        local: config/network.conf
+   # Create an empty /var/lib/systemd/linger/<USER> file
+   # to enable linger for the <USER> account
+   # Lingering is required to boot systemd user units at boot
+   # Equal to executing sudo loginctl enable-linger $USER after installation
+   - path: /var/lib/systemd/linger/git
+     mode: 0644
    # Podman related configuration
    # -----------------------------------------------------------------
    - path: /home/git/.config/containers/gitea.env
